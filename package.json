@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "A tool to create MCP complieant tools from an OpenAPI Spec",
   "main": "dist/index.js",
+  "bin": {
+    "openapi-to-tools": "./dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest"
@@ -12,6 +15,7 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.26.0",
+    "@types/js-yaml": "^4.0.9",
     "eslint-plugin-jest": "^28.11.0",
     "eslint-plugin-sort": "^4.0.0",
     "typescript": "^5.5.3",
@@ -20,6 +24,7 @@
   "dependencies": {
     "@buildwithlayer/openapi-zod-spec": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.11.0",
+    "js-yaml": "^4.1.0",
     "zod": "^3.24.4"
   }
 }
