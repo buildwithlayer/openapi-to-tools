@@ -19,7 +19,8 @@
     "eslint-plugin-jest": "^28.11.0",
     "eslint-plugin-sort": "^4.0.0",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^8.32.0"
+    "typescript-eslint": "^8.32.0",
+    "@types/node": "^22.15.14"
   },
   "dependencies": {
     "@buildwithlayer/openapi-zod-spec": "^0.1.0",
