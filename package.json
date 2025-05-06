@@ -12,7 +12,7 @@
   },
   "keywords": [],
   "author": "GavynWithLayer",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.26.0",
     "@types/js-yaml": "^4.0.9",
