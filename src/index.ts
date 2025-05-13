@@ -21,9 +21,9 @@ import {APIKeyAuth, BasicAuth, BearerAuth, ToolAuth} from './types';
 
 type ToolSchema = z.infer<typeof ToolSchema>;
 
-export interface ToolInfo {
+export interface ApiTool {
     method: string;
-    schema: ToolSchema;
+    tool: ToolSchema;
     url: string;
 }
 
@@ -212,7 +212,7 @@ export const schemaIsRequired = (schema: Schema, defs: Record<string, Schema>): 
     return false;
 };
 
-export const operationToTool = (operationName: string, operation: Operation, pathName: string, pathParameters: (Parameter | Reference)[], pathServer: Server, topLevelSecurityRequirement: SecurityRequirement[], components: Components): ToolInfo => {
+export const operationToTool = (operationName: string, operation: Operation, pathName: string, pathParameters: (Parameter | Reference)[], pathServer: Server, topLevelSecurityRequirement: SecurityRequirement[], components: Components): ApiTool => {
     const name = generateToolName(pathName, operationName, operation.operationId);
     const description = operation.description || operation.summary || '';
 
@@ -415,7 +415,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
 
     return {
         method: operationName,
-        schema: {
+        tool: {
             description,
             inputSchema,
             name,
@@ -424,14 +424,14 @@ export const operationToTool = (operationName: string, operation: Operation, pat
     };
 };
 
-export const parseToolsFromSpec = (spec: OpenAPI): ToolInfo[] => {
+export const parseToolsFromSpec = (spec: OpenAPI): ApiTool[] => {
     if (spec.paths === undefined) return [];
 
     const topLevelServer = spec.servers[0];
     const topLevelSecurityRequirement = spec.security ? spec.security : [];
     const components = spec.components ? spec.components : {};
 
-    const tools: ToolInfo[] = [];
+    const tools: ApiTool[] = [];
 
     for (const pathName of Object.keys(spec.paths)) {
         let path = spec.paths[pathName];
