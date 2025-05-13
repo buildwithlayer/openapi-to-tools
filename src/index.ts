@@ -22,6 +22,7 @@ import {APIKeyAuth, BasicAuth, BearerAuth, ToolAuth} from './types';
 type ToolSchema = z.infer<typeof ToolSchema>;
 
 export interface ApiTool {
+    contentType?: 'application/json' | 'application/x-www-form-urlencoded';
     method: string;
     tool: ToolSchema;
     url: string;
@@ -304,6 +305,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
 
     // Body
     let body: Schema | undefined = undefined;
+    let contentType: 'application/json' | 'application/x-www-form-urlencoded' | undefined;
     if (operation.requestBody) {
         let requestBody: RequestBody;
         if ('$ref' in operation.requestBody) {
@@ -319,6 +321,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
                     bodySchema.description = requestBody.description;
                 }
                 body = bodySchema;
+                contentType = 'application/json';
             }
         } else if ('application/x-www-form-urlencoded' in requestBody.content) {
             const bodySchema = mediaTypeToJsonSchema(requestBody.content['application/x-www-form-urlencoded'], components);
@@ -327,6 +330,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
                     bodySchema.description = requestBody.description;
                 }
                 body = bodySchema;
+                contentType = 'application/x-www-form-urlencoded';
             }
         }
     }
@@ -414,6 +418,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
     }
 
     return {
+        contentType,
         method: operationName,
         tool: {
             description,
