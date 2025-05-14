@@ -1,32 +1,21 @@
-import {Callback} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/callback';
-import {Components} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/components';
-import {Example} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/example';
-import {Header} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/header';
-import {Link} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/link';
-import {MediaType} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/media-type';
-import {OpenAPI} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/open-api';
-import {Operation} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/operation';
-import {Parameter} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/parameter';
-import {PathItem} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/path-item';
-import {Reference} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/reference';
-import {RequestBody} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/request-body';
-import {Response} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/response';
-import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema';
-import {SecurityRequirement} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-requirement';
-import {SecurityScheme} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-scheme';
-import {Server} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/server';
-import {ToolSchema} from '@modelcontextprotocol/sdk/types.js';
-import {z} from 'zod';
-import {APIKeyAuth, BasicAuth, BearerAuth, ToolAuth} from './types';
-
-type ToolSchema = z.infer<typeof ToolSchema>;
-
-export interface ApiTool {
-    contentType?: 'application/json' | 'application/x-www-form-urlencoded';
-    method: string;
-    tool: ToolSchema;
-    url: string;
-}
+import {Callback} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/callback.js';
+import {Components} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/components.js';
+import {Example} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/example.js';
+import {Header} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/header.js';
+import {Link} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/link.js';
+import {MediaType} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/media-type.js';
+import {OpenAPI} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/open-api.js';
+import {Operation} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/operation.js';
+import {Parameter} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/parameter.js';
+import {PathItem} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/path-item.js';
+import {Reference} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/reference.js';
+import {RequestBody} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/request-body.js';
+import {Response} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/response.js';
+import {Schema} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
+import {SecurityRequirement} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-requirement.js';
+import {SecurityScheme} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-scheme.js';
+import {Server} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/server.js';
+import {APIKeyAuth, APITool, BasicAuth, BearerAuth, MethodType, ToolAuth} from './types.js';
 
 type ResolvedReference =
     Callback
@@ -144,76 +133,7 @@ export const generateToolName = (pathName: string, operationName: string, operat
     return name.slice(0, 64);
 };
 
-export const schemaIsRequired = (schema: Schema, defs: Record<string, Schema>): boolean => {
-    if (typeof schema === 'boolean') return false;
-
-    if (schema.required) {
-        return schema.required.length > 0;
-    }
-
-    if (schema.allOf) {
-        let allOfRequired = false;
-        for (const item of schema.allOf) {
-            if (typeof item === 'boolean') continue;
-            else if (item.$ref) {
-                const defsKey = item.$ref.split('/').at(-1);
-                if (defsKey === undefined || !(defsKey in defs)) continue;
-                const subSchema = defs[defsKey];
-                if (schemaIsRequired(subSchema, defs)) {
-                    allOfRequired = true;
-                    break;
-                }
-            } else if (schemaIsRequired(item, defs)) {
-                allOfRequired = true;
-                break;
-            }
-        }
-
-        if (allOfRequired) return true;
-    }
-
-    if (schema.anyOf) {
-        let anyOfRequired = true;
-        for (const item of schema.anyOf) {
-            if (!anyOfRequired) break;
-            if (typeof item === 'boolean') {
-                anyOfRequired = false;
-            } else if (item.$ref) {
-                const defsKey = item.$ref.split('/').at(-1);
-                if (defsKey === undefined || !(defsKey in defs)) continue;
-                const subSchema = defs[defsKey];
-                anyOfRequired = anyOfRequired && schemaIsRequired(subSchema, defs);
-            } else {
-                anyOfRequired = anyOfRequired && schemaIsRequired(item, defs);
-            }
-        }
-
-        if (anyOfRequired) return true;
-    }
-
-    if (schema.oneOf) {
-        let oneOfRequired = true;
-        for (const item of schema.oneOf) {
-            if (!oneOfRequired) break;
-            if (typeof item === 'boolean') {
-                oneOfRequired = false;
-            } else if (item.$ref) {
-                const defsKey = item.$ref.split('/').at(-1);
-                if (defsKey === undefined || !(defsKey in defs)) continue;
-                const subSchema = defs[defsKey];
-                oneOfRequired = oneOfRequired && schemaIsRequired(subSchema, defs);
-            } else {
-                oneOfRequired = oneOfRequired && schemaIsRequired(item, defs);
-            }
-        }
-
-        if (oneOfRequired) return true;
-    }
-
-    return false;
-};
-
-export const operationToTool = (operationName: string, operation: Operation, pathName: string, pathParameters: (Parameter | Reference)[], pathServer: Server, topLevelSecurityRequirement: SecurityRequirement[], components: Components): ApiTool => {
+export const operationToTool = (operationName: string, operation: Operation, pathName: string, pathParameters: (Parameter | Reference)[], pathServer: Server, topLevelSecurityRequirement: SecurityRequirement[], components: Components): APITool => {
     const name = generateToolName(pathName, operationName, operation.operationId);
     const description = operation.description || operation.summary || '';
 
@@ -223,6 +143,13 @@ export const operationToTool = (operationName: string, operation: Operation, pat
     } else {
         server = pathServer;
     }
+
+    const apiTool: APITool = {
+        description,
+        method: operationName.toLowerCase() as MethodType,
+        name,
+        url: server.url + pathName,
+    };
 
     // Auth
     const allSecurityRequirements = topLevelSecurityRequirement.map(req => ({...req}));
@@ -265,6 +192,10 @@ export const operationToTool = (operationName: string, operation: Operation, pat
         }
     }
 
+    if (allAuth.length > 0) {
+        apiTool.auth = allAuth;
+    }
+
     // Parameters
     const allParameters: Parameter[] = [];
 
@@ -303,9 +234,11 @@ export const operationToTool = (operationName: string, operation: Operation, pat
         allParameters.push(param);
     }
 
+    if (allParameters.length > 0) {
+        apiTool.params = allParameters;
+    }
+
     // Body
-    let body: Schema | undefined = undefined;
-    let contentType: 'application/json' | 'application/x-www-form-urlencoded' | undefined;
     if (operation.requestBody) {
         let requestBody: RequestBody;
         if ('$ref' in operation.requestBody) {
@@ -320,8 +253,8 @@ export const operationToTool = (operationName: string, operation: Operation, pat
                 if (requestBody.description) {
                     bodySchema.description = requestBody.description;
                 }
-                body = bodySchema;
-                contentType = 'application/json';
+                apiTool.body = bodySchema;
+                apiTool.contentType = 'application/json';
             }
         } else if ('application/x-www-form-urlencoded' in requestBody.content) {
             const bodySchema = mediaTypeToJsonSchema(requestBody.content['application/x-www-form-urlencoded'], components);
@@ -329,114 +262,32 @@ export const operationToTool = (operationName: string, operation: Operation, pat
                 if (requestBody.description) {
                     bodySchema.description = requestBody.description;
                 }
-                body = bodySchema;
-                contentType = 'application/x-www-form-urlencoded';
+                apiTool.body = bodySchema;
+                apiTool.contentType = 'application/x-www-form-urlencoded';
             }
         }
     }
 
     const defs = updateToolAndGenerateDefs(allAuth, components);
     updateToolAndGenerateDefs(allParameters, components);
-    if (body !== undefined) {
-        updateToolAndGenerateDefs(body, components);
-    }
-
-    const properties: SchemaObject['properties'] = {};
-    const required: string[] = [];
-
-    if (allAuth.length > 0) {
-        const authProperties: SchemaObject['properties'] = {};
-        const authRequired: string[] = [];
-
-        for (const auth of allAuth) {
-            const item: SchemaObject = {
-                type: 'string',
-            };
-            if (auth.description) {
-                item.description = auth.description;
-            }
-            authProperties[auth.key] = item;
-            authRequired.push(auth.key);
-        }
-
-        if (authRequired.length === 1) {
-            properties['auth'] = {
-                properties: authProperties,
-                required: authRequired,
-                type: 'object',
-            };
-        } else {
-            properties['auth'] = {
-                oneOf: authRequired.map(key => ({required: [key]})),
-                properties: authProperties,
-                type: 'object',
-            };
-        }
-    }
-
-    if (allParameters.length > 0) {
-        const paramProperties: SchemaObject['properties'] = {};
-        const paramRequired: string[] = [];
-
-        for (const param of allParameters) {
-            if ('schema' in param) {
-                paramProperties[param.name] = param.schema;
-                if (param.required) paramRequired.push(param.name);
-            }
-        }
-
-        if (paramRequired.length > 0) {
-            properties['params'] = {
-                properties: paramProperties,
-                required: paramRequired,
-                type: 'object',
-            };
-        } else {
-            properties['params'] = {
-                properties: paramProperties,
-                type: 'object',
-            };
-        }
-    }
-
-    if (body !== undefined) {
-        properties['body'] = body;
-        if (schemaIsRequired(body, defs)) {
-            required.push('body');
-        }
-    }
-
-    const inputSchema: ToolSchema['inputSchema'] = {type: 'object'};
-    if (Object.keys(properties).length > 0) {
-        inputSchema.properties = properties;
-    }
-    if (required.length > 0) {
-        inputSchema.required = required;
-    }
-    if (Object.keys(defs).length > 0) {
-        inputSchema.$defs = defs;
+    if (apiTool.body !== undefined) {
+        updateToolAndGenerateDefs(apiTool.body, components);
     }
 
     return {
-        contentType,
-        method: operationName,
-        tool: {
-            description,
-            inputSchema,
-            name,
-        },
-        url: server.url + pathName,
+        ...apiTool,
+        defs,
     };
 };
 
-export const parseToolsFromSpec = (spec: OpenAPI): ApiTool[] => {
+export const parseToolsFromSpec = (spec: OpenAPI): APITool[] => {
     if (spec.paths === undefined) return [];
 
     const topLevelServer = spec.servers[0];
     const topLevelSecurityRequirement = spec.security ? spec.security : [];
     const components = spec.components ? spec.components : {};
 
-    const tools: ApiTool[] = [];
+    const tools: APITool[] = [];
 
     for (const pathName of Object.keys(spec.paths)) {
         let path = spec.paths[pathName];
