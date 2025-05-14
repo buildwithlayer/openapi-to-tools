@@ -32,6 +32,10 @@ export default class LayerMcpServer extends McpServer {
         }
 
         this.listToolsRequestHandler = this.listToolsRequestHandler.bind(this);
+        this.callApiToolRequestHandler = this.callApiToolRequestHandler.bind(this);
+        this.callRegisteredToolRequestHandler = this.callRegisteredToolRequestHandler.bind(this);
+        this.callToolRequestHandler = this.callToolRequestHandler.bind(this);
+        this.overrideToolRequestHandlers = this.overrideToolRequestHandlers.bind(this);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this as any).setToolRequestHandlers = () => this.overrideToolRequestHandlers();
