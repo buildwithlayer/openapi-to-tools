@@ -175,7 +175,7 @@ export default class LayerMcpServer extends McpServer {
                 return {
                     content: [
                         {
-                            text: response.data as string,
+                            text: JSON.stringify(response.data),
                             type: 'text' as const,
                         },
                     ],
@@ -187,7 +187,7 @@ export default class LayerMcpServer extends McpServer {
                     return {
                         content: [
                             {
-                                text: error.response.data as string,
+                                text: JSON.stringify(error.response.data, null, 2),
                                 type: 'text',
                             },
                         ],
