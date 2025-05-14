@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { OpenAPI } from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/open-api';
+import {OpenAPISpec, upgrade} from '@buildwithlayer/openapi-zod-spec';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import path from 'path';
-import { parseToolsFromSpec } from './index';
+import { parseToolsFromSpec } from './index.js';
 
 const args = process.argv.slice(2);
 
@@ -39,18 +39,18 @@ try {
     const fileContents = fs.readFileSync(inputFilePath, 'utf-8');
     const fileExtension = path.extname(inputFilePath).toLowerCase();
 
-    let spec: OpenAPI;
+    let spec: OpenAPISpec;
     if (fileExtension === '.yaml' || fileExtension === '.yml') {
-        spec = yaml.load(fileContents) as OpenAPI;
+        spec = OpenAPISpec.parse(yaml.load(fileContents));
     } else if (fileExtension === '.json') {
-        spec = JSON.parse(fileContents) as OpenAPI;
+        spec = OpenAPISpec.parse(JSON.parse(fileContents));
     } else {
         // Try parsing as JSON, then YAML as a fallback
         try {
-            spec = JSON.parse(fileContents) as OpenAPI;
+            spec = OpenAPISpec.parse(JSON.parse(fileContents));
         } catch (jsonError) {
             try {
-                spec = yaml.load(fileContents) as OpenAPI;
+                spec = OpenAPISpec.parse(yaml.load(fileContents));
             } catch (yamlError) {
                 console.error('Error: Could not parse input file. Ensure it is valid JSON or YAML.');
                 console.error('JSON parsing error:', (jsonError as Error).message);
@@ -60,6 +60,7 @@ try {
         }
     }
 
+    spec = upgrade(spec);
     const tools = parseToolsFromSpec(spec);
     const outputJson = JSON.stringify(tools, null, 2);
 

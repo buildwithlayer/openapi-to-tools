@@ -1,17 +1,26 @@
 {
     "compilerOptions": {
         "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
         "module": "Node16",
-        "outDir": "dist",
+        "outDir": "./dist",
         "rootDir": "src",
         "strict": true,
         "target": "es2022",
         "moduleResolution": "node16",
         "isolatedModules": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true
     },
     "include": [
         "./src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
     ],
     "ts-node": {
         "esm": true
