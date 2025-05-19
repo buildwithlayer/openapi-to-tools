@@ -1,6 +1,6 @@
 {
     "name": "@buildwithlayer/openapi-to-tools",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A tool to create MCP complieant tools from an OpenAPI Spec",
     "main": "dist/index.js",
     "bin": {
