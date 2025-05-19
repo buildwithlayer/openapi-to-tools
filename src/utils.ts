@@ -71,6 +71,13 @@ export const schemaIsRequired = (schema: Schema, defs: Record<string, Schema>): 
         if (oneOfRequired) return true;
     }
 
+    if (schema.$ref) {
+        const refValue = schema.$ref.split('/').at(-1);
+        if (refValue && refValue in defs) {
+            return schemaIsRequired(defs[refValue], defs);
+        }
+    }
+
     return false;
 };
 

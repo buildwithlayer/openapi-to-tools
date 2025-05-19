@@ -11,7 +11,7 @@ import {PathItem} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/path-item.js
 import {Reference} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/reference.js';
 import {RequestBody} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/request-body.js';
 import {Response} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/response.js';
-import {Schema} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
+import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
 import {SecurityRequirement} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-requirement.js';
 import {SecurityScheme} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-scheme.js';
 import {Server} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/server.js';
@@ -94,7 +94,19 @@ export const mediaTypeToJsonSchema = (mediaType: MediaType, components: Componen
         return mediaType.schema;
     }
 
-    const schema = structuredClone(mediaType.schema);
+    let schema: SchemaObject;
+    if (mediaType.schema.$ref) {
+        const refValue = mediaType.schema.$ref.split('/').at(-1);
+        if (refValue === undefined || components.schemas === undefined || !(refValue in components.schemas)) {
+            throw new Error(`Invalid reference: ${mediaType.schema.$ref}`);
+        }
+        if (typeof components.schemas[refValue] === 'boolean') {
+            return components.schemas[refValue];
+        }
+        schema = structuredClone(components.schemas[refValue]);
+    } else {
+        schema = structuredClone(mediaType.schema);
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const examples: any[] = [];
@@ -248,6 +260,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
             requestBody = operation.requestBody;
         }
 
+        // TODO: Support optional bodies (right now, they are requried if defined)
         if ('application/json' in requestBody.content) {
             const bodySchema = mediaTypeToJsonSchema(requestBody.content['application/json'], components);
             if (bodySchema !== undefined && typeof bodySchema !== 'boolean') {

@@ -3,7 +3,7 @@ import {OpenAPISpec, upgrade} from '@buildwithlayer/openapi-zod-spec';
 import fs from 'fs';
 import yaml from 'js-yaml';
 import path from 'path';
-import { parseToolsFromSpec } from './index.js';
+import {parseToolsFromSpec} from './index.js';
 
 const args = process.argv.slice(2);
 

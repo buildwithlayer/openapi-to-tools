@@ -89,7 +89,7 @@ export function addAPITools(server: unknown, apiTools: APITool[] | undefined) {
             );
         }
 
-        const url = apiTool.url;
+        let url = apiTool.url;
 
         const headers: Record<string, string> = {};
         const queryParams: Record<string, string> = {};
@@ -114,7 +114,7 @@ export function addAPITools(server: unknown, apiTools: APITool[] | undefined) {
                 if (param.in === 'header') {
                     headers[paramName] = paramValue as string;
                 } else if (param.in === 'path') {
-                    url.replace(`{${paramName}}`, paramValue as string);
+                    url = url.replace(`{${paramName}}`, paramValue as string);
                 } else if (param.in === 'query') {
                     queryParams[paramName] = paramValue as string;
                 }
