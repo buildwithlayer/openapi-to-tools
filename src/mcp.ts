@@ -1,49 +1,44 @@
-import {type ServerOptions} from '@modelcontextprotocol/sdk/server/index.js';
 import {McpServer, RegisteredTool, ToolCallback} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
-    CallToolRequest, CallToolRequestSchema,
+    CallToolRequest,
+    CallToolRequestSchema,
     CallToolResult,
     ErrorCode,
-    Implementation, ListToolsRequestSchema,
+    ListToolsRequestSchema,
     ListToolsResult,
     McpError,
     Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import {Ajv} from 'ajv';
-import axios, {AxiosRequestConfig} from 'axios';
+import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import {ZodRawShape} from 'zod';
 import {zodToJsonSchema} from 'zod-to-json-schema';
 import {APITool} from './types.js';
 import {apiToolToInputSchema, type ToolSchema} from './utils.js';
 
-export type LayerServerOptions = ServerOptions & {
-    apiTools: APITool[];
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+interface LayerServer extends McpServer {
+    _apiTools: { [name: string]: APITool };
+    _apiToolSchemas: { [name: string]: ToolSchema['inputSchema'] };
+    ajv: Ajv;
+    callApiToolRequestHandler(request: CallToolRequest): Promise<CallToolResult>;
+    callRegisteredToolRequestHandler(request: CallToolRequest, extra: any): Promise<CallToolResult>;
+    callToolRequestHandler(request: CallToolRequest, extra: any): Promise<CallToolResult>;
+    listToolsRequestHandler(): ListToolsResult;
+    overrideToolRequestHandlers(): void;
 }
 
-export default class LayerMcpServer extends McpServer {
-    private readonly ajv = new Ajv({useDefaults: true});
-    private _apiTools: { [name: string]: APITool } = {};
-    private _apiToolSchemas: { [name: string]: ToolSchema['inputSchema'] } = {};
-
-    constructor(serverInfo: Implementation, options?: LayerServerOptions) {
-        super(serverInfo, options);
-        for (const apiTool of options?.apiTools ?? []) {
-            this._apiTools[apiTool.name] = apiTool;
-        }
-
-        this.listToolsRequestHandler = this.listToolsRequestHandler.bind(this);
-        this.callApiToolRequestHandler = this.callApiToolRequestHandler.bind(this);
-        this.callRegisteredToolRequestHandler = this.callRegisteredToolRequestHandler.bind(this);
-        this.callToolRequestHandler = this.callToolRequestHandler.bind(this);
-        this.overrideToolRequestHandlers = this.overrideToolRequestHandlers.bind(this);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this as any).setToolRequestHandlers = () => this.overrideToolRequestHandlers();
+export function addAPITools(server: unknown, apiTools: APITool[] | undefined) {
+    (server as LayerServer).ajv = new Ajv({useDefaults: true});
+    (server as LayerServer)._apiTools = {};
+    for (const apiTool of apiTools ?? []) {
+        (server as LayerServer)._apiTools[apiTool.name] = apiTool;
     }
+    (server as LayerServer)._apiToolSchemas = {};
 
-    private listToolsRequestHandler(): ListToolsResult {
+    (server as LayerServer).listToolsRequestHandler = function (): ListToolsResult {
         const listRegisteredToolsResult: ListToolsResult['tools'] = Object.entries(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (this as any)._registeredTools as ({ [name: string]: RegisteredTool }),
         ).filter(([, tool]) => tool.enabled)
             .map(([name, tool]): Tool => {
@@ -73,9 +68,10 @@ export default class LayerMcpServer extends McpServer {
         return {
             tools: [...listRegisteredToolsResult, ...listApiToolsResult],
         };
-    }
+    };
+    (server as LayerServer).listToolsRequestHandler = (server as LayerServer).listToolsRequestHandler.bind(server);
 
-    private async callApiToolRequestHandler(request: CallToolRequest): Promise<CallToolResult> {
+    (server as LayerServer).callApiToolRequestHandler = async function (request: CallToolRequest): Promise<CallToolResult> {
         const apiTool = this._apiTools[request.params.name];
         const inputSchema = this._apiToolSchemas[request.params.name];
         if (!apiTool || !inputSchema) {
@@ -170,19 +166,19 @@ export default class LayerMcpServer extends McpServer {
             axiosRequestConfig.data = body;
         }
 
-        return axios.request(axiosRequestConfig)
-            .then(response => {
-                return {
-                    content: [
-                        {
-                            text: JSON.stringify(response.data),
-                            type: 'text' as const,
-                        },
-                    ],
-                    isError: false,
-                };
-            })
-            .catch(error => {
+        try {
+            const response = await axios.request(axiosRequestConfig);
+            return {
+                content: [
+                    {
+                        text: JSON.stringify(response.data),
+                        type: 'text' as const,
+                    },
+                ],
+                isError: false,
+            };
+        } catch (error) {
+            if (error instanceof AxiosError) {
                 if (error.response) {
                     return {
                         content: [
@@ -216,12 +212,22 @@ export default class LayerMcpServer extends McpServer {
                         isError: true,
                     };
                 }
-            });
-    }
+            }
+            console.error(error);
+            return {
+                content: [
+                    {
+                        text: 'Failed to complete API request',
+                        type: 'text',
+                    },
+                ],
+                isError: true,
+            };
+        }
+    };
+    (server as LayerServer).callApiToolRequestHandler = (server as LayerServer).callApiToolRequestHandler.bind(server);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async callRegisteredToolRequestHandler(request: CallToolRequest, extra: any): Promise<CallToolResult> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (server as LayerServer).callRegisteredToolRequestHandler = async function (request: CallToolRequest, extra: any): Promise<CallToolResult> {
         const tool: RegisteredTool | undefined = (this as any)._registeredTools[request.params.name];
         if (!tool) {
             throw new McpError(
@@ -279,19 +285,19 @@ export default class LayerMcpServer extends McpServer {
                 };
             }
         }
-    }
+    };
+    (server as LayerServer).callRegisteredToolRequestHandler = (server as LayerServer).callRegisteredToolRequestHandler.bind(server);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async callToolRequestHandler(request: CallToolRequest, extra: any): Promise<CallToolResult> {
+    (server as LayerServer).callToolRequestHandler = async function (request: CallToolRequest, extra: any): Promise<CallToolResult> {
         if (request.params.name in this._apiTools) {
             return this.callApiToolRequestHandler(request);
         } else {
             return this.callRegisteredToolRequestHandler(request, extra);
         }
-    }
+    };
+    (server as LayerServer).callToolRequestHandler = (server as LayerServer).callToolRequestHandler.bind(server);
 
-    private overrideToolRequestHandlers() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (server as LayerServer).overrideToolRequestHandlers = function () {
         if ((this as any)._toolHandlersInitialized) return;
 
         this.server.assertCanSetRequestHandler(ListToolsRequestSchema.shape.method.value);
@@ -306,7 +312,9 @@ export default class LayerMcpServer extends McpServer {
         this.server.setRequestHandler(ListToolsRequestSchema, this.listToolsRequestHandler);
         this.server.setRequestHandler(CallToolRequestSchema, this.callToolRequestHandler);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this as any)._toolHandlersInitialized = true;
-    }
+    };
+    (server as LayerServer).overrideToolRequestHandlers = (server as LayerServer).overrideToolRequestHandlers.bind(server);
+
+    (server as any).setToolRequestHandlers = () => (server as LayerServer).overrideToolRequestHandlers();
 }

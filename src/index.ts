@@ -204,6 +204,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
             const variable = server.variables[varName];
             allParameters.push(Parameter.parse({
                 description: variable.description,
+                in: 'path',
                 name: varName,
                 required: true,
                 schema: Schema.parse({
@@ -269,9 +270,9 @@ export const operationToTool = (operationName: string, operation: Operation, pat
     }
 
     const defs = updateToolAndGenerateDefs(allAuth, components);
-    updateToolAndGenerateDefs(allParameters, components);
+    updateToolAndGenerateDefs(allParameters, components, defs);
     if (apiTool.body !== undefined) {
-        updateToolAndGenerateDefs(apiTool.body, components);
+        updateToolAndGenerateDefs(apiTool.body, components, defs);
     }
 
     return {

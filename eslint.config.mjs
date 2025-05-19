@@ -36,7 +36,7 @@ export default tseslint.config(
         languageOptions: {
             globals: pluginJest.environments.globals.globals,
         },
-        plugins: { jest: pluginJest },
+        plugins: {jest: pluginJest},
         rules: {
             'jest/no-disabled-tests': 'error',
             'jest/no-focused-tests': 'error',
