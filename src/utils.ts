@@ -1,9 +1,5 @@
 import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
-import {ToolSchema} from '@modelcontextprotocol/sdk/types.js';
-import {z} from 'zod';
-import {APITool} from './types.js';
-
-export type ToolSchema = z.infer<typeof ToolSchema>;
+import {APITool, InputSchema} from './types.js';
 
 export const schemaIsRequired = (schema: Schema, defs: Record<string, Schema>): boolean => {
     if (typeof schema === 'boolean') return false;
@@ -81,7 +77,7 @@ export const schemaIsRequired = (schema: Schema, defs: Record<string, Schema>): 
     return false;
 };
 
-export const apiToolToInputSchema = (apiTool: APITool): ToolSchema['inputSchema'] => {
+export const apiToolToInputSchema = (apiTool: APITool, overrides: { [propertyName: string]: unknown }): InputSchema => {
     const properties: SchemaObject['properties'] = {};
     const required: string[] = [];
 
@@ -95,6 +91,9 @@ export const apiToolToInputSchema = (apiTool: APITool): ToolSchema['inputSchema'
             };
             if (auth.description) {
                 item.description = auth.description;
+            }
+            if (auth.key in overrides) {
+                item.default = overrides[auth.key];
             }
             authProperties[auth.key] = item;
             authRequired.push(auth.key);
@@ -113,6 +112,8 @@ export const apiToolToInputSchema = (apiTool: APITool): ToolSchema['inputSchema'
                 type: 'object',
             };
         }
+
+        properties['auth'].default = {};
     }
 
     if (apiTool.params && apiTool.params.length > 0) {
@@ -121,7 +122,11 @@ export const apiToolToInputSchema = (apiTool: APITool): ToolSchema['inputSchema'
 
         for (const param of apiTool.params) {
             if ('schema' in param) {
-                paramProperties[param.name] = param.schema;
+                const schema = structuredClone(param.schema);
+                if (param.name in overrides && typeof schema !== 'boolean') {
+                    schema.default = overrides[param.name];
+                }
+                paramProperties[param.name] = schema;
                 if (param.required) paramRequired.push(param.name);
             }
         }
@@ -138,6 +143,8 @@ export const apiToolToInputSchema = (apiTool: APITool): ToolSchema['inputSchema'
                 type: 'object',
             };
         }
+
+        properties['params'].default = {};
     }
 
     if (apiTool.body) {
@@ -147,7 +154,7 @@ export const apiToolToInputSchema = (apiTool: APITool): ToolSchema['inputSchema'
         }
     }
 
-    const inputSchema: ToolSchema['inputSchema'] = {type: 'object'};
+    const inputSchema: InputSchema = {type: 'object'};
     if (Object.keys(properties).length > 0) {
         inputSchema.properties = properties;
     }

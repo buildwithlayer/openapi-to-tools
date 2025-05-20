@@ -1,5 +1,7 @@
 import {Parameter} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/parameter.js';
 import {Schema} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
+import {ToolSchema} from '@modelcontextprotocol/sdk/types.js';
+import {z} from 'zod';
 
 export type MethodType = 'delete' | 'get' | 'head' | 'options' | 'patch' | 'post' | 'put' | 'trace';
 
@@ -38,3 +40,7 @@ export type APITool = {
     params?: Parameter[];
     url: string;
 }
+
+export type ToolSchema = z.infer<typeof ToolSchema>;
+
+export type InputSchema = ToolSchema['inputSchema'];
