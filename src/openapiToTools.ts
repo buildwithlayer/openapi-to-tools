@@ -1,20 +1,20 @@
-import {Callback} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/callback.js';
-import {Components} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/components.js';
-import {Example} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/example.js';
-import {Header} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/header.js';
-import {Link} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/link.js';
-import {MediaType} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/media-type.js';
-import {OpenAPI} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/open-api.js';
-import {Operation} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/operation.js';
-import {Parameter} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/parameter.js';
-import {PathItem} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/path-item.js';
-import {Reference} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/reference.js';
-import {RequestBody} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/request-body.js';
-import {Response} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/response.js';
-import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
-import {SecurityRequirement} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-requirement.js';
-import {SecurityScheme} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/security-scheme.js';
-import {Server} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/server.js';
+import {Callback} from '@buildwithlayer/openapi-zod-spec/3/1/1/callback.js';
+import {Components} from '@buildwithlayer/openapi-zod-spec/3/1/1/components.js';
+import {Example} from '@buildwithlayer/openapi-zod-spec/3/1/1/example.js';
+import {Header} from '@buildwithlayer/openapi-zod-spec/3/1/1/header.js';
+import {Link} from '@buildwithlayer/openapi-zod-spec/3/1/1/link.js';
+import {MediaType} from '@buildwithlayer/openapi-zod-spec/3/1/1/media-type.js';
+import {OpenAPI} from '@buildwithlayer/openapi-zod-spec/3/1/1/open-api.js';
+import {Operation} from '@buildwithlayer/openapi-zod-spec/3/1/1/operation.js';
+import {Parameter} from '@buildwithlayer/openapi-zod-spec/3/1/1/parameter.js';
+import {PathItem} from '@buildwithlayer/openapi-zod-spec/3/1/1/path-item.js';
+import {Reference} from '@buildwithlayer/openapi-zod-spec/3/1/1/reference.js';
+import {RequestBody} from '@buildwithlayer/openapi-zod-spec/3/1/1/request-body.js';
+import {Response} from '@buildwithlayer/openapi-zod-spec/3/1/1/response.js';
+import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/3/1/1/schema.js';
+import {SecurityRequirement} from '@buildwithlayer/openapi-zod-spec/3/1/1/security-requirement.js';
+import {SecurityScheme} from '@buildwithlayer/openapi-zod-spec/3/1/1/security-scheme.js';
+import {Server} from '@buildwithlayer/openapi-zod-spec/3/1/1/server.js';
 import {APIKeyAuth, APITool, BasicAuth, BearerAuth, MethodType, ToolAuth} from './types.js';
 
 type ResolvedReference =

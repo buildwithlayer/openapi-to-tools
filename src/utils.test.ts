@@ -1,4 +1,4 @@
-import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
+import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/3/1/1/schema.js';
 import {APITool} from './types.js';
 import {apiToolToInputSchema} from './utils.js';
 

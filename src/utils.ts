@@ -1,4 +1,4 @@
-import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/dist/3/1/1/schema.js';
+import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/3/1/1/schema.js';
 import {APITool, InputSchema} from './types.js';
 
 export const schemaIsRequired = (schema: Schema, defs: Record<string, Schema>): boolean => {
