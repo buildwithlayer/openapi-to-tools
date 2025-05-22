@@ -114,7 +114,7 @@ export class LayerOpenAPIPlugin {
                     headers['Authorization'] = `Basic ${authValue as string}`;
                 } else if (toolAuth.type === 'apiKey') {
                     // TODO: Support cookie + query
-                    headers[toolAuth.key] = authValue as string;
+                    headers[toolAuth.name] = authValue as string;
                 }
             }
         }
