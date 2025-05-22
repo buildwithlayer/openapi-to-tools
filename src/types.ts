@@ -1,7 +1,7 @@
-import {ToolSchema} from '@modelcontextprotocol/sdk/types.js';
-import {z} from 'zod';
 import {Parameter} from '@buildwithlayer/openapi-zod-spec/3/1/1/parameter.js';
 import {Schema} from '@buildwithlayer/openapi-zod-spec/3/1/1/schema.js';
+import {ToolSchema} from '@modelcontextprotocol/sdk/types.js';
+import {z} from 'zod';
 
 export type MethodType = 'delete' | 'get' | 'head' | 'options' | 'patch' | 'post' | 'put' | 'trace';
 
@@ -44,3 +44,7 @@ export type APITool = {
 export type ToolSchema = z.infer<typeof ToolSchema>;
 
 export type InputSchema = ToolSchema['inputSchema'];
+
+export interface Overrides {
+    [propertyName: string]: unknown;
+}
