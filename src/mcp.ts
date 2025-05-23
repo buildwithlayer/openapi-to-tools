@@ -61,7 +61,7 @@ export class LayerOpenAPIPlugin {
         let url = apiTool.url;
 
         const headers: Record<string, string> = {};
-        const queryParams: Record<string, string> = {};
+        const queryParams: Record<string, any> = {};
         const params = request.params.arguments?.params;
         if (params) {
             if (apiTool.params === undefined) {
@@ -85,7 +85,7 @@ export class LayerOpenAPIPlugin {
                 } else if (param.in === 'path') {
                     url = url.replace(`{${paramName}}`, paramValue as string);
                 } else if (param.in === 'query') {
-                    queryParams[paramName] = paramValue as string;
+                    queryParams[paramName] = paramValue;
                 }
             }
         }
@@ -125,6 +125,19 @@ export class LayerOpenAPIPlugin {
             headers,
             method: apiTool.method,
             url,
+            paramsSerializer: params => {
+            // THIS IS COPILOT CODE, PLEASE REVIEW BEFORE MERGING
+            // Custom serializer to handle arrays correctly
+            return Object.entries(params)
+                .map(([key, value]) => {
+                    if (Array.isArray(value)) {
+                        // For arrays, return key with comma-separated values
+                        return `${encodeURIComponent(key)}=${value.map(item => encodeURIComponent(item)).join(',')}`;
+                    }
+                    return `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`;
+                })
+                .join('&');
+            }
         };
 
         if (Object.keys(queryParams).length > 0) {
