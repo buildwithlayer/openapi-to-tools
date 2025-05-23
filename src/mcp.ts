@@ -131,8 +131,8 @@ export class LayerOpenAPIPlugin {
             return Object.entries(params)
                 .map(([key, value]) => {
                     if (Array.isArray(value)) {
-                        // For arrays, return each value with the same key
-                        return value.map(item => `${encodeURIComponent(key)}=${encodeURIComponent(item)}`).join('&');
+                        // For arrays, return key with comma-separated values
+                        return `${encodeURIComponent(key)}=${value.map(item => encodeURIComponent(item)).join(',')}`;
                     }
                     return `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`;
                 })
