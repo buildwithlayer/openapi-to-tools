@@ -1,3 +1,4 @@
+import {Parameter} from '@buildwithlayer/openapi-zod-spec/3/1/1/parameter.js';
 import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/3/1/1/schema.js';
 import {APITool, InputSchema} from './types.js';
 
@@ -166,4 +167,97 @@ export const apiToolToInputSchema = (apiTool: APITool, overrides: { [propertyNam
     }
 
     return inputSchema;
+};
+
+export const serializeParameter = (param: Parameter, paramValue: string | string[] | object): string => {
+    // TODO: implement this
+};
+
+export const buildUrlFromParameters = (url: string, parameters?: Parameter[], paramValues?: Record<string, string | string[] | object>): string => {
+    if (parameters === undefined || parameters.length === 0) {
+        return url;
+    }
+
+    const pathParams: (Parameter & {in: 'path'})[] = parameters.filter(param => param.in === 'path');
+    for (const param of pathParams) {
+        if (paramValues === undefined || !(param.name in paramValues)) continue;
+        url = url.replace(`{${param.name}`, serializeParameter(param, paramValues[param.name]));
+    }
+
+    const matrixParams = parameters.filter(param => ('style' in param && param.style === 'matrix'));
+
+    const
+
+    const matrixParams: Parameter[] = [];
+    const labelParams: Parameter[] = [];
+    const simpleParams: Parameter[] = [];
+    const otherParams: Parameter[] = [];
+
+    for (const param of parameters) {
+        switch (param.in) {
+            case 'path': {
+                pathParams.push(param);
+                break;
+            }
+            case 'query': {
+                if ('content' in param) {
+                    otherParams.push(param);
+                } else {
+                    switch (param.style) {
+                        case 'matrix': {
+                            matrixParams.push(param);
+                            break;
+                        }
+                        case 'label': {
+                            labelParams.push(param);
+                            break;
+                        }
+                        case 'simple': {
+                            simpleParams.push(param);
+                            break;
+                        }
+                        default: {
+                            otherParams.push(param);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (const param of pathParams) {
+        const paramValue = paramValues?.[param.name];
+
+        let replacement: string = '';
+        if ('content' in param) {
+            if (paramValue !== undefined) {
+                const mimeType = Object.keys(param.content)[0];
+
+                // TODO: support other MIME types
+                if (mimeType === 'application/json' && (Array.isArray(paramValue) || typeof paramValue === 'object')) {
+                    replacement = JSON.stringify(paramValue);
+                } else {
+                    replacement = paramValue;
+                }
+                replacement = encodeURIComponent(replacement);
+            }
+        } else {
+            switch (param.style) {
+                case 'matrix': {
+                    if (paramValue === undefined) {
+                        replacement = `;${param.name}`;
+                        break;
+                    }
+                    if (Array.isArray(paramValue)) {
+                        if (param.explode) {
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    const builtUrl;
 };

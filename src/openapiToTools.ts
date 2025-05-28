@@ -216,6 +216,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
             const variable = server.variables[varName];
             allParameters.push(Parameter.parse({
                 description: variable.description,
+                explode: false,
                 in: 'path',
                 name: varName,
                 required: true,
@@ -225,6 +226,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
                     enum: variable.enum,
                     type: 'string',
                 }),
+                style: 'simple',
             }));
         }
     }
@@ -242,9 +244,23 @@ export const operationToTool = (operationName: string, operation: Operation, pat
             param = paramOrRef;
         }
 
-        if (param.in === 'cookie' || 'content' in param) continue;
+        if ('content' in param) {
+            const contentParam = structuredClone(param);
+            for (const key of Object.keys(contentParam.content)) {
+                const mediaType = contentParam.content[key];
+                if (mediaType === undefined || typeof mediaType.schema === 'boolean' || mediaType.schema?.$ref === undefined) continue;
 
-        if (typeof param.schema === 'boolean' || param.schema.$ref === undefined) {
+                const {$ref, ...rest} = mediaType.schema;
+                const schema = resolveReference<Schema>($ref, components);
+                if (typeof schema === 'boolean') continue;
+
+                mediaType.schema = {
+                    ...rest,
+                    ...schema,
+                };
+            }
+            allParameters.push(contentParam);
+        } else if (typeof param.schema === 'boolean' || param.schema.$ref === undefined) {
             allParameters.push(param);
         } else {
             const {$ref, ...rest} = param.schema;

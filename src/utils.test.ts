@@ -98,3 +98,95 @@ describe('apiToolToInputSchema', () => {
         expect(calApiVersion.default).toBeDefined();
     });
 });
+
+describe('buildUrlFromParameters', () => {
+    describe('schema parameters', () => {
+        describe('header parameters, simple', () => {
+            // TODO: test primitive, array, object
+            // TODO: test explode, no explode
+        });
+
+        describe('path parameters', () => {
+            describe('matrix', () => {
+                // TODO: test primitive, array, object
+                // TODO: test explode, no explode
+            });
+
+            describe('label', () => {
+                // TODO: test primitive, array, object
+                // TODO: test explode, no explode
+            });
+
+            describe('simple', () => {
+                // TODO: test primitive, array, object
+                // TODO: test explode, no explode
+            });
+        });
+
+        describe('query parameters', () => {
+            describe('form', () => {
+                // TODO: test primitive, array, object
+                // TODO: test explode, no explode
+            });
+
+            describe('spaceDelimited', () => {
+                // TODO: test array, object
+                // TODO: test explode, no explode
+            });
+
+            describe('pipeDelimited', () => {
+                // TODO: test array, object
+                // TODO: test explode, no explode
+            });
+
+            describe('deepObject', () => {
+                // TODO: test object
+                // TODO: test explode, no explode
+            });
+        });
+    });
+
+    describe('content parameters', () => {
+        describe('header parameters', () => {
+            describe('primitive', () => {
+                // TODO: text/plain
+            });
+
+            describe('array', () => {
+                // TODO: application/json + text/plain
+            });
+
+            describe('object', () => {
+                // TODO: application/json + application/xml + text/plain
+            });
+        });
+
+        describe('path parameters', () => {
+            describe('primitive', () => {
+                // TODO: text/plain
+            });
+
+            describe('array', () => {
+                // TODO: application/json + text/plain
+            });
+
+            describe('object', () => {
+                // TODO: application/json + application/xml + text/plain
+            });
+        });
+
+        describe('query parameters', () => {
+            describe('primitive', () => {
+                // TODO: text/plain
+            });
+
+            describe('array', () => {
+                // TODO: application/json + text/plain
+            });
+
+            describe('object', () => {
+                // TODO: application/json + application/xml + text/plain
+            });
+        });
+    });
+});
