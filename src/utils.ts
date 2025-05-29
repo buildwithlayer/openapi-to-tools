@@ -169,95 +169,91 @@ export const apiToolToInputSchema = (apiTool: APITool, overrides: { [propertyNam
     return inputSchema;
 };
 
-export const serializeParameter = (param: Parameter, paramValue: string | string[] | object): string => {
-    // TODO: implement this
+const serializeSchemaParameter = (param: Parameter, paramValue: unknown): string | undefined => {
+    if (paramValue === undefined || paramValue === null || 'content' in param) return undefined;
+    if (Array.isArray(paramValue)) {
+        switch (param.style) {
+            case 'matrix': {
+                if (param.explode) {
+                    return paramValue.map(value => `;${param.name}=${encodeURIComponent(value)}`).join('');
+                } else {
+                    return `;${param.name}=${paramValue.map(value => encodeURIComponent(value)).join(',')}`;
+                }
+            }
+            case 'label': {
+                return `.${paramValue.map(value => encodeURIComponent(value)).join('.')}`;
+            }
+            case 'simple': {
+                return paramValue.map(value => encodeURIComponent(value)).join(',');
+            }
+            default:
+                throw new Error('Unsupported style: ' + param.style);
+        }
+    } else if (typeof paramValue === 'object') {
+        switch (param.style) {
+            case 'matrix': {
+                if (param.explode) {
+                    return Object.entries(paramValue).map(([k, v]) => `;${k}=${encodeURIComponent(v)}`).join('');
+                } else {
+                    return `;${param.name}=${Object.entries(paramValue).map(([k, v]) => `${k},${encodeURIComponent(v)}`).join(',')}`;
+                }
+            }
+            case 'label': {
+                if (param.explode) {
+                    return Object.entries(paramValue).map(([k, v]) => `.${k}=${encodeURIComponent(v)}`).join('');
+                } else {
+                    return Object.entries(paramValue).map(([k, v]) => `.${k}.${encodeURIComponent(v)}`).join('');
+                }
+            }
+            case 'simple': {
+                if (param.explode) {
+                    return Object.entries(paramValue).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join(',');
+                } else {
+                    return Object.entries(paramValue).map(([k, v]) => `${k},${encodeURIComponent(v)}`).join(',');
+                }
+            }
+            default:
+                throw new Error('Unsupported style: ' + param.style);
+        }
+    } else {
+        switch (param.style) {
+            case 'matrix': {
+                return `;${param.name}=${encodeURIComponent(`${paramValue}`)}`;
+            }
+            case 'label': {
+                return `.${encodeURIComponent(`${paramValue}`)}`;
+            }
+            case 'simple': {
+                return encodeURIComponent(`${paramValue}`);
+            }
+            default:
+                throw new Error('Unsupported style: ' + param.style);
+        }
+    }
 };
 
-export const buildUrlFromParameters = (url: string, parameters?: Parameter[], paramValues?: Record<string, string | string[] | object>): string => {
+const serializeContentParameter = (param: Parameter, paramValue: string | string[] | object | undefined): string | undefined => {
+    throw new Error('Not implemented');
+};
+
+export const serializeParameter = (param: Parameter, paramValue: string | string[] | object | undefined): string | undefined => {
+    return 'content' in param ? serializeContentParameter(param, paramValue) : serializeSchemaParameter(param, paramValue);
+};
+
+export const buildUrlFromParameters = (url: string, parameters?: Parameter[], paramValues?: Record<string, string | string[] | object | undefined>): string => {
     if (parameters === undefined || parameters.length === 0) {
         return url;
     }
 
-    const pathParams: (Parameter & {in: 'path'})[] = parameters.filter(param => param.in === 'path');
+    const pathParams = parameters.filter(param => param.in === 'path');
     for (const param of pathParams) {
         if (paramValues === undefined || !(param.name in paramValues)) continue;
-        url = url.replace(`{${param.name}`, serializeParameter(param, paramValues[param.name]));
-    }
-
-    const matrixParams = parameters.filter(param => ('style' in param && param.style === 'matrix'));
-
-    const
-
-    const matrixParams: Parameter[] = [];
-    const labelParams: Parameter[] = [];
-    const simpleParams: Parameter[] = [];
-    const otherParams: Parameter[] = [];
-
-    for (const param of parameters) {
-        switch (param.in) {
-            case 'path': {
-                pathParams.push(param);
-                break;
-            }
-            case 'query': {
-                if ('content' in param) {
-                    otherParams.push(param);
-                } else {
-                    switch (param.style) {
-                        case 'matrix': {
-                            matrixParams.push(param);
-                            break;
-                        }
-                        case 'label': {
-                            labelParams.push(param);
-                            break;
-                        }
-                        case 'simple': {
-                            simpleParams.push(param);
-                            break;
-                        }
-                        default: {
-                            otherParams.push(param);
-                            break;
-                        }
-                    }
-                }
-            }
+        const serialized = serializeParameter(param, paramValues[param.name]);
+        if (serialized === undefined) {
+            throw new Error(`Failed to serialize parameter ${param.name}`);
         }
+        url = url.replace(`{${param.name}}`, serialized);
     }
 
-    for (const param of pathParams) {
-        const paramValue = paramValues?.[param.name];
-
-        let replacement: string = '';
-        if ('content' in param) {
-            if (paramValue !== undefined) {
-                const mimeType = Object.keys(param.content)[0];
-
-                // TODO: support other MIME types
-                if (mimeType === 'application/json' && (Array.isArray(paramValue) || typeof paramValue === 'object')) {
-                    replacement = JSON.stringify(paramValue);
-                } else {
-                    replacement = paramValue;
-                }
-                replacement = encodeURIComponent(replacement);
-            }
-        } else {
-            switch (param.style) {
-                case 'matrix': {
-                    if (paramValue === undefined) {
-                        replacement = `;${param.name}`;
-                        break;
-                    }
-                    if (Array.isArray(paramValue)) {
-                        if (param.explode) {
-
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    const builtUrl;
+    return url;
 };
