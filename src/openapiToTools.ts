@@ -295,7 +295,7 @@ export const operationToTool = (operationName: string, operation: Operation, pat
             requestBody = operation.requestBody;
         }
 
-        // TODO: Support optional bodies (right now, they are requried if defined)
+        // TODO: Support optional bodies (right now, they are required if defined)
         if ('application/json' in requestBody.content) {
             const bodySchema = mediaTypeToJsonSchema(requestBody.content['application/json'], components);
             if (bodySchema !== undefined && typeof bodySchema !== 'boolean') {

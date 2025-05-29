@@ -16,7 +16,7 @@ import {
 import {Ajv} from 'ajv';
 import axios, {AxiosError, AxiosRequestConfig} from 'axios';
 import {APITool, InputSchema, Overrides} from './types.js';
-import {apiToolToInputSchema} from './utils.js';
+import {apiToolToInputSchema, buildUrlFromParameters, serializeParameter} from './utils.js';
 
 export class LayerOpenAPIPlugin {
     protected ajv: Ajv;
@@ -58,35 +58,15 @@ export class LayerOpenAPIPlugin {
             );
         }
 
-        let url = apiTool.url;
+        const paramValues = request.params.arguments?.params as Record<string, unknown> | undefined;
+        const url = buildUrlFromParameters(apiTool.url, apiTool.params, paramValues);
 
         const headers: Record<string, string> = {};
-        const queryParams = new URLSearchParams();
-        const params = request.params.arguments?.params;
-        if (params) {
-            if (apiTool.params === undefined) {
-                throw new McpError(
-                    ErrorCode.InvalidParams,
-                    `Tool ${request.params.name} does not support parameters`,
-                );
-            }
-
-            for (const [paramName, paramValue] of Object.entries(params)) {
-                const param = apiTool.params.find(p => p.name === paramName);
-                if (param === undefined) {
-                    throw new McpError(
-                        ErrorCode.InvalidParams,
-                        `Tool ${request.params.name} does not support parameter ${paramName}`,
-                    );
-                }
-
-                if (param.in === 'header') {
-                    headers[paramName] = paramValue as string;
-                } else if (param.in === 'path') {
-                    url = url.replace(`{${paramName}}`, paramValue as string);
-                } else if (param.in === 'query') {
-                    queryParams.append(paramName, paramValue);
-                }
+        if (paramValues !== undefined) {
+            for (const param of (apiTool.params ?? []).filter(p => p.in === 'header')) {
+                if (!(param.name in paramValues)) continue;
+                const value = serializeParameter(param, paramValues[param.name]);
+                if (value !== undefined) headers[param.name] = value;
             }
         }
 
@@ -126,10 +106,6 @@ export class LayerOpenAPIPlugin {
             method: apiTool.method,
             url,
         };
-
-        if (Object.keys(queryParams).length > 0) {
-            axiosRequestConfig.params = queryParams;
-        }
 
         if (body) {
             axiosRequestConfig.data = body;

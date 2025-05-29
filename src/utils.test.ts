@@ -1,3 +1,4 @@
+import {Parameter} from '@buildwithlayer/openapi-zod-spec/3/1/1/parameter.js';
 import {Schema, SchemaObject} from '@buildwithlayer/openapi-zod-spec/3/1/1/schema.js';
 import {APITool} from './types.js';
 import {apiToolToInputSchema, buildUrlFromParameters} from './utils.js';
@@ -136,19 +137,6 @@ describe('buildUrlFromParameters', () => {
     };
 
     describe('schema parameters', () => {
-        describe('header parameters, simple', () => {
-            test('primitive', () => {
-            });
-
-            test('array', () => {
-                // TODO: test explode, no explode
-            });
-
-            test('object', () => {
-                // TODO: test explode, no explode
-            });
-        });
-
         describe('path parameters', () => {
             const url = 'https://example.com/api/{pathParam}';
 
@@ -357,7 +345,6 @@ describe('buildUrlFromParameters', () => {
                 });
             });
         });
-
         describe('query parameters', () => {
             const url = 'https://example.com/api/';
 
@@ -404,7 +391,7 @@ describe('buildUrlFromParameters', () => {
                             },
                         ];
                         const actual = buildUrlFromParameters(url, parameters, {'queryParam': arrayValue});
-                        expect(actual).toBe('https://example.com/api/?queryParam=string1&queryParam=string2');
+                        expect(actual).toBe('https://example.com/api/?queryParam=string1,string2');
                     });
                 });
 
@@ -413,92 +400,317 @@ describe('buildUrlFromParameters', () => {
                         const parameters = [
                             {
                                 explode: true,
-                                in: 'path' as const,
-                                name: 'pathParam',
+                                in: 'query' as const,
+                                name: 'queryParam',
                                 required: true,
                                 schema: defs['Object'],
-                                style: 'matrix',
+                                style: 'form',
                             },
                         ];
-                        const actual = buildUrlFromParameters(url, parameters, {'pathParam': objectValue});
-                        expect(actual).toBe('https://example.com/api/;age=40;name=Bob');
+                        const actual = buildUrlFromParameters(url, parameters, {'queryParam': objectValue});
+                        expect(actual).toBe('https://example.com/api/?age=40&name=Bob');
                     });
 
                     test('no explode', () => {
                         const parameters = [
                             {
                                 explode: false,
-                                in: 'path' as const,
-                                name: 'pathParam',
+                                in: 'query' as const,
+                                name: 'queryParam',
                                 required: true,
                                 schema: defs['Object'],
-                                style: 'matrix',
+                                style: 'form',
                             },
                         ];
-                        const actual = buildUrlFromParameters(url, parameters, {'pathParam': objectValue});
-                        expect(actual).toBe('https://example.com/api/;pathParam=age,40,name,Bob');
+                        const actual = buildUrlFromParameters(url, parameters, {'queryParam': objectValue});
+                        expect(actual).toBe('https://example.com/api/?queryParam=age,40,name,Bob');
                     });
                 });
             });
 
             describe('spaceDelimited', () => {
-                // TODO: test array, object
-                // TODO: test explode, no explode
+                test('array', () => {
+                    const parameters = [
+                        {
+                            explode: false,
+                            in: 'query' as const,
+                            name: 'queryParam',
+                            required: true,
+                            schema: defs['Array'],
+                            style: 'spaceDelimited',
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'queryParam': arrayValue});
+                    expect(actual).toBe('https://example.com/api/?queryParam=string1%20string2');
+                });
+
+                test('object', () => {
+                    const parameters = [
+                        {
+                            explode: false,
+                            in: 'query' as const,
+                            name: 'queryParam',
+                            required: true,
+                            schema: defs['Object'],
+                            style: 'spaceDelimited',
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'queryParam': objectValue});
+                    expect(actual).toBe('https://example.com/api/?queryParam=age%2040%20name%20Bob');
+                });
             });
 
             describe('pipeDelimited', () => {
-                // TODO: test array, object
-                // TODO: test explode, no explode
+                test('array', () => {
+                    const parameters = [
+                        {
+                            explode: false,
+                            in: 'query' as const,
+                            name: 'queryParam',
+                            required: true,
+                            schema: defs['Array'],
+                            style: 'pipeDelimited',
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'queryParam': arrayValue});
+                    expect(actual).toBe('https://example.com/api/?queryParam=string1%7Cstring2');
+                });
+
+                test('object', () => {
+                    const parameters = [
+                        {
+                            explode: false,
+                            in: 'query' as const,
+                            name: 'queryParam',
+                            required: true,
+                            schema: defs['Object'],
+                            style: 'pipeDelimited',
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'queryParam': objectValue});
+                    expect(actual).toBe('https://example.com/api/?queryParam=age%7C40%7Cname%7CBob');
+                });
             });
 
-            describe('deepObject', () => {
-                // TODO: test object
-                // TODO: test explode, no explode
+            test('deepObject', () => {
+                const parameters = [
+                    {
+                        explode: true,
+                        in: 'query' as const,
+                        name: 'queryParam',
+                        required: true,
+                        schema: defs['Object'],
+                        style: 'deepObject',
+                    },
+                ];
+                const actual = buildUrlFromParameters(url, parameters, {'queryParam': objectValue});
+                expect(actual).toBe('https://example.com/api/?queryParam%5Bage%5D=40&queryParam%5Bname%5D=Bob');
             });
         });
     });
 
     describe('content parameters', () => {
-        describe('header parameters', () => {
-            describe('primitive', () => {
-                // TODO: text/plain
-            });
-
-            describe('array', () => {
-                // TODO: application/json + text/plain
-            });
-
-            describe('object', () => {
-                // TODO: application/json + application/xml + text/plain
-            });
-        });
-
         describe('path parameters', () => {
-            describe('primitive', () => {
-                // TODO: text/plain
+            const url = 'https://example.com/api/{pathParam}';
+
+            test('primitive', () => {
+                const parameters = [
+                    {
+                        content: {
+                            'text/plain': {
+                                schema: defs['Primitive'],
+                            },
+                        },
+                        in: 'path' as const,
+                        name: 'pathParam',
+                        required: true,
+                    },
+                ];
+                const actual = buildUrlFromParameters(url, parameters, {'pathParam': primitiveValue});
+                expect(actual).toBe('https://example.com/api/stringValue');
             });
 
             describe('array', () => {
-                // TODO: application/json + text/plain
+                test('text/plain', () => {
+                    const parameters = [
+                        {
+                            content: {
+                                'application/json': {
+                                    schema: defs['Array'],
+                                },
+                            },
+                            in: 'path' as const,
+                            name: 'pathParam',
+                            required: true,
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'pathParam': arrayValue});
+                    expect(actual).toBe('https://example.com/api/%5B%22string1%22%2C%22string2%22%5D');
+                });
+                test('application/json', () => {
+                    const parameters = [
+                        {
+                            content: {
+                                'application/json': {
+                                    schema: defs['Array'],
+                                },
+                            },
+                            in: 'path' as const,
+                            name: 'pathParam',
+                            required: true,
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'pathParam': arrayValue});
+                    expect(actual).toBe('https://example.com/api/%5B%22string1%22%2C%22string2%22%5D');
+                });
             });
 
-            describe('object', () => {
-                // TODO: application/json + application/xml + text/plain
+            test('object', () => {
+                const parameters = [
+                    {
+                        content: {
+                            'application/json': {
+                                schema: defs['Object'],
+                            },
+                        },
+                        in: 'path' as const,
+                        name: 'pathParam',
+                        required: true,
+                    },
+                ];
+                const actual = buildUrlFromParameters(url, parameters, {'pathParam': objectValue});
+                expect(actual).toBe('https://example.com/api/%7B%22age%22%3A40%2C%22name%22%3A%22Bob%22%7D');
             });
         });
-
         describe('query parameters', () => {
-            describe('primitive', () => {
-                // TODO: text/plain
+            const url = 'https://example.com/api/';
+
+            test('primitive', () => {
+                const parameters = [
+                    {
+                        content: {
+                            'text/plain': {
+                                schema: defs['Primitive'],
+                            },
+                        },
+                        in: 'query' as const,
+                        name: 'queryParam',
+                        required: true,
+                    },
+                ];
+                const actual = buildUrlFromParameters(url, parameters, {'queryParam': primitiveValue});
+                expect(actual).toBe('https://example.com/api/?queryParam=stringValue');
             });
 
             describe('array', () => {
-                // TODO: application/json + text/plain
+                test('text/plain', () => {
+                    const parameters = [
+                        {
+                            content: {
+                                'text/plain': {
+                                    schema: defs['Array'],
+                                },
+                            },
+                            in: 'query' as const,
+                            name: 'queryParam',
+                            required: true,
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'queryParam': arrayValue});
+                    expect(actual).toBe('https://example.com/api/?queryParam=string1%2Cstring2');
+                });
+                test('application/json', () => {
+                    const parameters = [
+                        {
+                            content: {
+                                'application/json': {
+                                    schema: defs['Array'],
+                                },
+                            },
+                            in: 'query' as const,
+                            name: 'queryParam',
+                            required: true,
+                        },
+                    ];
+                    const actual = buildUrlFromParameters(url, parameters, {'queryParam': arrayValue});
+                    expect(actual).toBe('https://example.com/api/?queryParam=%5B%22string1%22%2C%22string2%22%5D');
+                });
             });
 
-            describe('object', () => {
-                // TODO: application/json + application/xml + text/plain
+            test('object', () => {
+                const parameters = [
+                    {
+                        content: {
+                            'application/json': {
+                                schema: defs['Object'],
+                            },
+                        },
+                        in: 'query' as const,
+                        name: 'queryParam',
+                        required: true,
+                    },
+                ];
+                const actual = buildUrlFromParameters(url, parameters, {'queryParam': objectValue});
+                expect(actual).toBe('https://example.com/api/?queryParam=%7B%22age%22%3A40%2C%22name%22%3A%22Bob%22%7D');
             });
         });
+    });
+
+    test('many different parameters', () => {
+        const url = 'https://example.com/api/{id}';
+        const parameters: Parameter[] = [
+            {
+                explode: false,
+                in: 'path',
+                name: 'id',
+                required: true,
+                schema: {
+                    type: 'string',
+                },
+                style: 'simple',
+            },
+            {
+                content: {
+                    'text/plain': {
+                        schema: defs['Array'],
+                    },
+                },
+                in: 'query' as const,
+                name: 'contentArray',
+                required: true,
+            },
+            {
+                content: {
+                    'application/json': {
+                        schema: defs['Object'],
+                    },
+                },
+                in: 'query' as const,
+                name: 'contentObject',
+                required: true,
+            },
+            {
+                explode: false,
+                in: 'query' as const,
+                name: 'schemaObject',
+                required: true,
+                schema: defs['Object'],
+                style: 'form',
+            },
+        ];
+        const paramValues = {
+            contentArray: ['string1', 'string2'],
+            contentObject: {
+                age: 40,
+                name: 'Bob',
+            },
+            id: '12345',
+            schemaObject: {
+                age: 42,
+                name: 'Sally',
+            },
+        };
+        const actual = buildUrlFromParameters(url, parameters, paramValues);
+        expect(actual).toBe('https://example.com/api/12345?contentArray=string1%2Cstring2&contentObject=%7B%22age%22%3A40%2C%22name%22%3A%22Bob%22%7D&schemaObject=age,42,name,Sally');
     });
 });
