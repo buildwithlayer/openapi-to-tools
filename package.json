@@ -1,6 +1,6 @@
 {
     "name": "@buildwithlayer/openapi-to-tools",
-    "version": "1.2.2",
+    "version": "1.3.0",
     "description": "A tool to create MCP compliant tools from an OpenAPI Spec",
     "license": "MIT",
     "author": "GavynWithLayer",
