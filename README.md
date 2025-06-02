@@ -114,4 +114,5 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## License
 
-[MIT License](https://andreasonny.mit-license.org/2019) © Andrea SonnY
+Currently, this is unlicensed and requires explicit permission to use.
+In the future, we will open up this license.
