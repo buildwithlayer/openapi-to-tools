@@ -116,7 +116,7 @@ export class LayerOpenAPIPlugin {
             return {
                 content: [
                     {
-                        text: JSON.stringify(response.data),
+                        text: JSON.stringify(response.data, null, 2),
                         type: 'text' as const,
                     },
                 ],

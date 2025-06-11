@@ -239,3 +239,63 @@ describe('adding tools to servers', () => {
         expect(result.tools[2].inputSchema).toEqual({type: 'object'});
     });
 });
+
+test('Invalid parameters response', async () => {
+    const server = new McpServer(
+        {
+            name: 'test-server',
+            version: '1.0.0',
+        },
+        {
+            capabilities: {
+                tools: {},
+            },
+        },
+    );
+    addAPIToolsPlugin(server, [{
+        description: 'Calls an api to get a cat image',
+        method: 'get',
+        name: 'getCatImage',
+        params: [
+            {
+                description: 'The number of pictures to return',
+                in: 'query',
+                name: 'count',
+                required: true,
+                schema: {
+                    default: 1,
+                    exclusiveMaximum: 100,
+                    exclusiveMinimum: 0,
+                    type: 'number',
+                },
+                style: 'form',
+            },
+        ],
+        url: 'https://api.thecatapi.com/v1/images/search',
+    }]);
+
+    const client = new Client({
+        name: 'test client',
+        version: '1.0',
+    });
+
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    await Promise.all([
+        client.connect(clientTransport),
+        server.connect(serverTransport),
+    ]);
+
+    await expect(client.callTool({
+        arguments: {},
+        name: 'getCatImage',
+    })).resolves.toBeDefined();
+
+    await expect(client.callTool({
+        arguments: {
+            params: {
+                count: 0,
+            },
+        },
+        name: 'getCatImage',
+    })).rejects.toBeDefined();
+});
